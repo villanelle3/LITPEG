@@ -1,7 +1,7 @@
 function main()
     println("Olá, GitHub!")
 
-    a = 10
+    a = 28
     b = 20
     soma = a + b
 
