@@ -16,8 +16,7 @@
 # Além disso há as variáveis de correção (uLδ, uGδ, Pδ), que armazenam
 # apenas o INCREMENTO calculado pela equação de pressão.
 #
-# Isso é a base de um esquema tipo SIMPLE (Semi-Implicit Method for
-# Pressure-Linked Equations), muito comum em CFD de escoamentos multifásicos.
+# Isso é a base de um esquema tipo SIMPLE
 # ============================================================================
 
 # ----------------------------------------------------------------------------
