@@ -1,0 +1,82 @@
+Comprimento (m):
+45000
+Diâmetro (m):
+0.45
+Inclinação (rad):
+0
+Número de segmentos:
+16
+Tempo de simulação (s):
+3600
+Velocidade de entrada de líquido/água (m/s):
+0.98
+Velocidade de entrada de gás/óleo (m/s):
+5.25
+Densidade do líquido/água (kg/m³):
+720
+Densidade do gás/óleo (kg/m³):
+48.8
+Pressão na saída do domínio (Pa):
+6e6
+Fração de gás/óleo na entrada:
+0.992
+Fração de gás/óleo inicial no duto:
+0.992
+Temperatura na entrada do duto:
+60
+Temperatua inicial:
+20
+CFL (baseado nas velocidades de entrada):
+0.1
+Tolerância para a pressão:
+1e-3
+Tolerância para as velocidades:
+1e-3
+Tolerância para as frações:
+1e-3
+Capacidade térmica da fase líquida
+4176.98
+Capacidade térmica da fase gás
+2030.31
+Codutividade da líquida
+0.641612
+Codutividade da Gás
+0.141
+Temperatura externa
+60
+Viscosidade do líquido
+4.4e-4
+Viscosidade da Gás
+1.3e-5
+Condutividade térmica do duto (aço de baixo teor de cromo - tirado do livro do Incropera)
+45
+Diâmetro externo do duto
+0.5
+Aceleração da gravidade (m/s²)
+-9.81
+velocidade do som no gás/óleo (m/s)
+350.8
+Velocidade do som no líquido/água (m/s)
+1480
+Coeficiente de expansão volumétrica da gás/óleo
+1.667e-6
+Coeficiente de expansão volumétrica do líquido/água (m/s)
+0.0
+γ
+1.2
+entalpia externa
+500
+Método numérico (1 = MUSCL, 2 = FR):
+1
+Grau (ordem do polinômio p, ex.: 1, 2, 3) quando for FR:
+1
+C da correção FR (0=DG, 1=SD, 2=Huynh, -1=Radau):
+-1
+Transferência de Calor? (1 = sim, 0 = não)
+0
+Padrão de Escoamento? (1 = anular, 2 = estratificado)
+2
+Rugosidade absoluta da parede
+4.57e-5
+Método de Estabilização (1 = Cathare, 2 = Correlações do estratificado horizontal)
+2

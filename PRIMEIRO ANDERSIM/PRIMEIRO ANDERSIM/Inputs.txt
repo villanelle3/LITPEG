@@ -1,0 +1,32 @@
+Length (m):
+12
+Diameter (m):
+1
+Inclination (rad):
+-1.57
+Number of segments:
+256
+Simulation time (s):
+0.5
+Liquid inlet velocity (m/s):
+10.0
+Gas inlet velocity (m/s):
+0.00
+Liquid density (kg/m³):
+1000
+Gas density (kg/m³):
+1.16
+Pressure at the domain outlet (Pa):
+1e5
+Gas fraction at the inlet:
+0.2
+Initial gas fraction in the pipe:
+0.2
+CFL (based on inlet velocities):
+0.5
+Pressure tolerance:
+1e-3
+Velocity tolerance:
+1e-3
+Fraction tolerance:
+1e-3
