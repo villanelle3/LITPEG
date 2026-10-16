@@ -33,6 +33,35 @@ using CSV             # Escrita de arquivos CSV
 using DataFrames      # Estrutura de dados tabular (DataFrame)
 using LinearAlgebra   # Função norm() para cálculo de erros
 
+# NIVEIS (AMR)
+function geometria(nivel, h0)
+    N = length(nivel)
+    h  = h0 ./ 2.0 .^ nivel          # largura de cada célula
+    xf = zeros(N+1)                   # posição das faces
+    for i = 1:N
+        xf[i+1] = xf[i] + h[i]
+    end
+    xc = [xf[i] + h[i]/2 for i = 1:N] # centros (só para a saída)
+    dc = zeros(N+1)
+    hv = zeros(N+1)
+    for j = 2:N                       # faces internas
+        dc[j] = (h[j-1] + h[j]) / 2
+        hv[j] = (h[j-1] + h[j]) / 2
+    end
+    dc[1]   = h[1]/2;  hv[1]   = h[1]/2      # faces das pontas (não usadas
+    dc[N+1] = h[N]/2;  hv[N+1] = h[N]/2      # nos laços internos)
+    return h, dc, hv, xc, xf
+end
+
+function expandir(nivel_base)
+    # cada célula-base de nível l vira 2^l células de nível l
+    nivel = Int[]
+    for l in nivel_base
+        append!(nivel, fill(l, 2^l))
+    end
+    return nivel
+end
+
 # ============================================================================
 # 1) LEITURA DO ARQUIVO DE ENTRADA (Inputs.txt)
 # ============================================================================
@@ -81,14 +110,24 @@ aux = maximum(u_inlet)                    # Maior velocidade de entrada (para Δ
 Δt = (CFL * Δx) / aux                     # Passo de tempo inicial (CFL)
 
 
-# NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-# NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-h  = fill(Δx, N)     # largura de cada célula de pressão/fração
-dc = fill(Δx, N+1)   # distância entre centros vizinhos
-hv = fill(Δx, N+1)   # largura do volume de controle de cada velocidade
-# NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-# NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
+# nivel = zeros(Int, N)       # 0 = célula sem refinamento
+# h0 = Δx                     # largura da célula-base
+# h, dc, hv, xc, xf = geometria(nivel, h0)
 
+nivel_base = zeros(Int, N)              # N ainda é o número de células-base
+# j1 = ceil(Int, 5.5/Δx)                  # refinar de x = 5,5 m
+# j2 = floor(Int, 7.5/Δx)                 # até x = 7,5 m
+# nivel_base[j1:j2] .= 1
+j1 = 1                              # desde a entrada
+j2 = floor(Int, 7.5/Δx)             # até x = 7,5 m
+nivel_base[j1:j2] .= 1
+# nivel_base[:] .= 1          # todas as células refinadas: malha uniforme de 512
+
+nivel = expandir(nivel_base)
+N = length(nivel)                       # agora N inclui as células novas
+h0 = Δx
+h, dc, hv, xc, xf = geometria(nivel, h0)
+println("N = ", N, "   soma de h - Comp = ", sum(h) - Comp)
 
 # ============================================================================
 # 4) ALOCAÇÃO DAS VARIÁVEIS PRINCIPAIS
@@ -248,6 +287,10 @@ b[N]  = 0.0
 # 11) LAÇO PRINCIPAL NO TEMPO
 # ============================================================================
 t = 0
+it_max = 0
+n_naoconv = 0
+n_passos = 0
+
 while t < tempo
 
     # ------------------------------------------------------------------------
@@ -259,7 +302,7 @@ while t < tempo
     #aux2 += cG                     # (comentado) velocidade do som — não usado
     u = [aux1, aux2]
     wavevel = maximum(u)           # Velocidade de onda máxima no domínio
-    global Δt = (CFL * Δx) / (wavevel)
+    global Δt = (CFL * minimum(h)) / (wavevel)
     global t
     global Δt = minimum([Δt, (tempo - t)])   # Não ultrapassar o tempo final
     global t = t + Δt                        # Avança o tempo
@@ -339,19 +382,10 @@ while t < tempo
             mt_L = (ρL * αL0[i] + ρL * αL0[i+1]) / (2 * Δt)
             mt_G = (ρG * αG0[i] + ρG * αG0[i+1]) / (2 * Δt)
 
-            # # Termos de gradiente de pressão (α/Δx) — média entre nós
-            # mx_L = (αLØ[i] + αLØ[i+1]) / (2 * Δx)
-            # mx_G = (αGØ[i] + αGØ[i+1]) / (2 * Δx)
-
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
 
             # Termos de gradiente de pressão (α/Δx) — média entre nós
             mx_L = (αLØ[i] + αLØ[i+1]) / (2 * hv[i+1])
             mx_G = (αGØ[i] + αGØ[i+1]) / (2 * hv[i+1])
-
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
 
 
             # Termos gravitacionais (ρ·α·g·sinθ) — média entre nós
@@ -376,13 +410,8 @@ while t < tempo
             #   d_L·uL[i+1] + dl_L·uL[i] = b_L
             # ----------------------------------------------------------------
 
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-            # NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO NOVO
-
-            # d_L[i+1]  = mt_L + G_Lws / Δx + Γ_L
             d_L[i+1]  = mt_L + G_Lws / hv[i+1] + Γ_L
             du_L[i+1] = 0.0
-            # dl_L[i+1] = -G_Lws / Δx
             dl_L[i+1] = -G_Lws / hv[i+1]
             b_L[i+1]  = mt_L*uL0[i+1] - mx_L*(PØ[i+1]-PØ[i]) - mg_L - Γ_L + Γ_L*ui
             
@@ -393,7 +422,6 @@ while t < tempo
             # Montagem do sistema linear para o GÁS (upwind conforme sinal)
             # ----------------------------------------------------------------
             if uGØ[i+1] >= 0
-                # d_G[i+1]  = mt_G + (G_Gws/Δx) + Γ_G
                 d_G[i+1]  = mt_G + (G_Gws / hv[i+1]) + Γ_G
                 du_G[i+1] = 0.0
                 dl_G[i+1] = -G_Gws/hv[i+1]
@@ -561,7 +589,15 @@ while t < tempo
         αGØ[:] = αG[:]
         PØ[:]  = P[:]
     end
-
+    global it_max = max(it_max, cont1)
+    global n_passos += 1
+    if cont1 >= 1000
+        global n_naoconv += 1
+        if n_naoconv == 1
+            println("1º passo sem convergir: t = ", t)
+            println("erros: uL=", e_uL, " uG=", e_uG, " aL=", e_αL, " aG=", e_αG, " P=", e_P)
+        end
+    end
     # ------------------------------------------------------------------------
     # 13) ATUALIZAÇÃO TEMPORAL — o instante atual vira o "anterior"
     # ------------------------------------------------------------------------
@@ -572,18 +608,22 @@ while t < tempo
     P0[:]  = P[:]
 end
 
+
 # ============================================================================
 # 14) SAÍDA DE DADOS
 # ============================================================================
 # Cria um DataFrame com os resultados finais e exporta para CSV
-df = DataFrame(Pr=P, UL=uL[1:N], UG=uG[1:N], AlfaL=αL, AlfaG=αG)
+# df = DataFrame(Pr=P, UL=uL[1:N], UG=uG[1:N], AlfaL=αL, AlfaG=αG)
+df = DataFrame(x=xc, Pr=P, UL=uL[1:N], UG=uG[1:N], AlfaL=αL, AlfaG=αG, nivel=nivel)
 CSV.write("export.csv", df)
 
 # ============================================================================
 # 15) GRÁFICO FINAL — perfil de fração de gás ao longo do domínio
 # ============================================================================
-aux2 = Comp/(N-1)              # Passo espacial usado para o eixo x do gráfico
+# aux2 = Comp/(N-1)              # Passo espacial usado para o eixo x do gráfico
 # plot(0:aux2:Comp, αG)          # Plota αG em função da posição
 
-savefig(plot(0:aux2:Comp, αG), "perfil.png")
-println("Gráfico salvo em perfil.png")
+# savefig(plot(0:aux2:Comp, αG), "perfil.png")
+# println("Gráfico salvo em perfil.png")
+println("iterações máx. = ", it_max)
+println("passos = ", n_passos, "   sem convergir = ", n_naoconv, "   it_max = ", it_max)
