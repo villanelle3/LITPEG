@@ -49,7 +49,7 @@ for i = 2:2:(2*n_dados)
 end
 
 # ============================================================================
-# 2) VARIÁVEIS DE ENTRADA (mapeamento do vetor 'dados' para nomes)
+# 2) VARIÁVEIS DE ENTRADA 
 # ============================================================================
 Comp        = dados[1]    # Comprimento total do domínio (m)
 D           = dados[2]    # Diâmetro interno do tubo (m)
@@ -552,4 +552,7 @@ CSV.write("export.csv", df)
 # 15) GRÁFICO FINAL — perfil de fração de gás ao longo do domínio
 # ============================================================================
 aux2 = Comp/(N-1)              # Passo espacial usado para o eixo x do gráfico
-plot(0:aux2:Comp, αG)          # Plota αG em função da posição
+# plot(0:aux2:Comp, αG)          # Plota αG em função da posição
+
+savefig(plot(0:aux2:Comp, αG), "perfil.png")
+println("Gráfico salvo em perfil.png")
